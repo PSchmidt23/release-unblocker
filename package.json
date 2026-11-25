@@ -1,0 +1,30 @@
+{
+  "name": "release-unblocker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Unblock failed CI and security findings by dispatching a Cursor cloud agent through deterministic policy gates.",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "tsx src/server.ts",
+    "demo": "tsx src/demo.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cursor/sdk": "1.5.0",
+    "zod": "3.25.76"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.16.0",
+    "@types/node": "^22.10.2",
+    "eslint": "^9.16.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.0",
+    "vitest": "^2.1.8"
+  }
+}

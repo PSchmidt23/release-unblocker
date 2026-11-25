@@ -1,0 +1,43 @@
+{
+  "deliveryId": "demo-scenario-a",
+  "evidence": {
+    "failedJobs": [
+      {
+        "name": "lint, typecheck, test",
+        "conclusion": "failure",
+        "steps": [
+          { "name": "Run npm ci", "conclusion": "success" },
+          { "name": "Run npm run lint", "conclusion": "failure" },
+          { "name": "Run npm run typecheck", "conclusion": "failure" },
+          { "name": "Run npm test", "conclusion": "success" }
+        ]
+      }
+    ],
+    "logSnippets": [
+      "/home/runner/work/demo-commercial-app/demo-commercial-app/src/pricing/currency.ts",
+      "1:10  error  'randomUUID' is defined but never used  @typescript-eslint/no-unused-vars",
+      "src/pricing/currency.ts(74,44): error TS2339: Property 'den' does not exist on type 'number'.",
+      "src/pricing/currency.ts(74,57): error TS2339: Property 'num' does not exist on type 'number'.",
+      "src/pricing/currency.ts(75,67): error TS2339: Property 'num' does not exist on type 'number'.",
+      "src/pricing/currency.ts(75,80): error TS2339: Property 'den' does not exist on type 'number'.",
+      "src/pricing/currency.ts(97,3): error TS2322: Type '{ num: bigint; den: bigint; }' is not assignable to type 'number'."
+    ]
+  },
+  "payload": {
+    "action": "completed",
+    "workflow_run": {
+      "id": 45702809861,
+      "name": "CI",
+      "conclusion": "failure",
+      "head_branch": "ci-fail-lint-type",
+      "head_sha": "f8ff3454deed00601422cc582d99ca4bb315a20d",
+      "html_url": "https://github.com/PSchmidt23/demo-commercial-app/actions/runs/45702809861",
+      "display_title": "Tighten parseRate's return type",
+      "run_attempt": 1
+    },
+    "repository": {
+      "full_name": "PSchmidt23/demo-commercial-app",
+      "html_url": "https://github.com/PSchmidt23/demo-commercial-app"
+    }
+  }
+}
