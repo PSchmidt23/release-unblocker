@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Release Unblocker</title>
+  <style>
+    :root {
+      --bg: #f3efe6;
+      --ink: #1c1915;
+      --muted: #5e574c;
+      --line: #ddd4c4;
+      --panel: #fffdf8;
+      --green: #1d6b45;
+      --green-bg: #e5f4eb;
+      --amber: #8a5a00;
+      --amber-bg: #fff1d6;
+      --red: #8d2f2f;
+      --red-bg: #fde8e4;
+      --blue: #1e4f86;
+      --blue-bg: #e7f0fa;
+      --shadow: 0 1px 0 rgba(28, 25, 21, 0.04);
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 15px/1.45 ui-sans-serif, "Segoe UI", sans-serif;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      gap: 24px;
+      align-items: flex-end;
+      padding: 28px 32px 18px;
+      border-bottom: 1px solid var(--line);
+    }
+    h1 { margin: 0; font-size: 28px; font-weight: 650; letter-spacing: -0.03em; }
+    .kicker { margin: 0 0 4px; color: var(--muted); font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase; }
+    #meta { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+    .pill {
+      border: 1px solid var(--line);
+      background: var(--panel);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font: 12px/1.4 ui-monospace, monospace;
+    }
+    .pill.live { background: var(--green-bg); color: var(--green); border-color: transparent; }
+    .pill.mock { background: var(--amber-bg); color: var(--amber); border-color: transparent; }
+    main {
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      flex: 1;
+      min-height: 0;
+    }
+    #list, #detail { overflow: auto; }
+    #list { border-right: 1px solid var(--line); padding: 12px; }
+    .item {
+      width: 100%;
+      text-align: left;
+      border: 1px solid transparent;
+      background: transparent;
+      color: inherit;
+      border-radius: 10px;
+      padding: 12px;
+      cursor: pointer;
+      margin-bottom: 6px;
+    }
+    .item strong { display: block; font-size: 14px; }
+    .item span { color: var(--muted); font-size: 12px; }
+    .item.selected { background: var(--panel); border-color: var(--line); box-shadow: var(--shadow); }
+    #detail { padding: 22px 28px 48px; }
+    .empty { color: var(--muted); max-width: 46ch; }
+    .state { font: 12px/1 ui-monospace, monospace; padding: 3px 7px; border-radius: 999px; }
+    .state.AUTO_FIXED { background: var(--green-bg); color: var(--green); }
+    .state.PR_OPEN { background: var(--blue-bg); color: var(--blue); }
+    .state.ESCALATED, .state.FAILED { background: var(--red-bg); color: var(--red); }
+    .state.AGENT_RUNNING, .state.GATES, .state.CLASSIFIED, .state.RECEIVED { background: var(--amber-bg); color: var(--amber); }
+    .stepper { display: flex; gap: 8px; flex-wrap: wrap; margin: 16px 0 20px; }
+    .step {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 6px 8px;
+      font: 11px/1 ui-monospace, monospace;
+      color: var(--muted);
+      background: var(--panel);
+    }
+    .step.done { color: var(--ink); border-color: #c8bfb0; }
+    .step.current { background: var(--ink); color: #fff; border-color: var(--ink); }
+    section.card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+    }
+    h2 { margin: 0 0 8px; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+    .check { display: grid; grid-template-columns: 64px 1fr; gap: 8px; padding: 6px 0; border-top: 1px solid var(--line); font-size: 14px; }
+    .check:first-of-type { border-top: 0; }
+    .pass { color: var(--green); font-family: ui-monospace, monospace; font-size: 12px; }
+    .fail { color: var(--red); font-family: ui-monospace, monospace; font-size: 12px; }
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      font: 12px/1.5 ui-monospace, monospace;
+      background: #1c1915;
+      color: #f3efe6;
+      border-radius: 10px;
+      padding: 12px;
+      max-height: 280px;
+      overflow: auto;
+    }
+    a { color: var(--blue); }
+    .row { display: flex; gap: 18px; flex-wrap: wrap; }
+    .row div { min-width: 140px; }
+    .label { color: var(--muted); font-size: 12px; }
+    @media (max-width: 860px) {
+      body { overflow: auto; }
+      main { grid-template-columns: 1fr; }
+      header { flex-direction: column; align-items: flex-start; }
+      #list { border-right: 0; border-bottom: 1px solid var(--line); max-height: 40vh; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <p class="kicker">Webhook → classify → agent → gates</p>
+      <h1>Release Unblocker</h1>
+    </div>
+    <div id="meta"></div>
+  </header>
+  <main>
+    <aside id="list"></aside>
+    <section id="detail"></section>
+  </main>
+  <script>
+    const FLOW = ["RECEIVED", "CLASSIFIED", "AGENT_RUNNING", "GATES"];
+    const TERMINAL = ["AUTO_FIXED", "PR_OPEN", "ESCALATED", "FAILED"];
+    let selectedId = null;
+    let renderedId = null;
+
+    function esc(value) {
+      return String(value ?? "").replace(/[&<>"']/g, (ch) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+      }[ch]));
+    }
+
+    async function refresh() {
+      const [meta, data] = await Promise.all([
+        fetch("/api/meta").then((r) => r.json()),
+        fetch("/api/incidents").then((r) => r.json()),
+      ]);
+      renderMeta(meta);
+      const incidents = data.incidents || [];
+      if (!selectedId && incidents[0]) selectedId = incidents[0].id;
+      if (selectedId && !incidents.some((item) => item.id === selectedId) && incidents[0]) {
+        selectedId = incidents[0].id;
+      }
+      renderList(incidents);
+      renderDetail(incidents.find((item) => item.id === selectedId));
+    }
+
+    function renderMeta(meta) {
+      const mode = meta.mode === "live" ? "live" : "mock";
+      document.getElementById("meta").innerHTML = [
+        `<span class="pill ${mode}">${mode}</span>`,
+        `<span class="pill">${esc(meta.model)}</span>`,
+        `<span class="pill">grok ${meta.grok ? esc(meta.grokModel) : "off"}</span>`,
+        `<span class="pill">github ${meta.github ? "on" : "off"}</span>`,
+      ].join("");
+    }
+
+    function renderList(incidents) {
+      const list = document.getElementById("list");
+      if (!incidents.length) {
+        list.innerHTML = `<p class="empty">No incidents yet.</p>`;
+        return;
+      }
+      list.innerHTML = incidents.map((item) => `
+        <button class="item ${item.id === selectedId ? "selected" : ""}" data-id="${esc(item.id)}">
+          <strong>${esc(item.title)}</strong>
+          <span class="state ${esc(item.state)}">${esc(item.state)}</span>
+          <span>${esc(item.classification ? item.classification.category + " · " + item.classification.policy : item.id)}</span>
+        </button>
+      `).join("");
+      for (const button of list.querySelectorAll("button")) {
+        button.addEventListener("click", () => {
+          selectedId = button.dataset.id;
+          refresh();
+        });
+      }
+    }
+
+    function renderDetail(incident) {
+      const root = document.getElementById("detail");
+      const switched = (incident && incident.id) !== renderedId;
+      if (!incident) {
+        root.innerHTML = `<p class="empty">Run <code>npm run demo -- --scenario A</code> in another terminal. Scenarios B and C are the test failure and the auth finding.</p>`;
+        renderedId = null;
+        return;
+      }
+      const reached = new Set(incident.timeline.map((step) => step.state));
+      const steps = FLOW.map((state) => {
+        const current = incident.state === state;
+        const done = reached.has(state);
+        return `<span class="step ${current ? "current" : ""} ${done ? "done" : ""}">${esc(state)}</span>`;
+      }).join("");
+      const terminal = TERMINAL.includes(incident.state)
+        ? `<span class="step current">${esc(incident.state)}</span>`
+        : "";
+      const classification = incident.classification ? `
+        <section class="card">
+          <h2>Classification</h2>
+          <div class="row">
+            <div><div class="label">Category</div>${esc(incident.classification.category)}</div>
+            <div><div class="label">Risk</div>${esc(incident.classification.risk)}</div>
+            <div><div class="label">Policy</div>${esc(incident.classification.policy)}</div>
+            <div><div class="label">Branch</div>${esc(incident.branch || "")}</div>
+          </div>
+          <p>${esc(incident.classification.reasons.join(" "))}</p>
+          ${incident.evidenceNote ? `<p class="label">${esc(incident.evidenceNote)}</p>` : ""}
+          ${incident.classification.protectedPaths.length ? `<p>Protected: ${esc(incident.classification.protectedPaths.join(", "))}</p>` : ""}
+        </section>` : "";
+      const gates = (incident.gates || []).map((report, index) => `
+        <section class="card">
+          <h2>Gates · attempt ${index + 1} · ${report.passed ? "pass" : "fail"}</h2>
+          ${report.checks.map((check) => `
+            <div class="check">
+              <span class="${check.passed ? "pass" : "fail"}">${check.passed ? "PASS" : "FAIL"}</span>
+              <span>${esc(check.reason)}</span>
+            </div>`).join("")}
+        </section>`).join("");
+      const summary = incident.summary ? `
+        <section class="card">
+          <h2>Summary · ${esc(incident.summary.source)}</h2>
+          <p><strong>What broke.</strong> ${esc(incident.summary.whatBroke)}</p>
+          <p><strong>Likely cause.</strong> ${esc(incident.summary.likelyCause)}</p>
+          <p><strong>What the agent did.</strong> ${esc(incident.summary.whatTheAgentDid)}</p>
+          <p><strong>Gates.</strong> ${esc(incident.summary.gateResults)}</p>
+          <p><strong>Next.</strong> ${esc(incident.summary.recommendedAction)}</p>
+          ${incident.summary.note ? `<p class="label">${esc(incident.summary.note)}</p>` : ""}
+        </section>` : "";
+      const agent = incident.agent ? `
+        <section class="card">
+          <h2>Agent · ${esc(incident.agent.source)} · ${esc(incident.agent.mode)}</h2>
+          <div class="row">
+            <div><div class="label">Agent</div>${esc(incident.agent.agentId)}</div>
+            <div><div class="label">Attempts</div>${esc(incident.agent.attempts)}</div>
+            <div><div class="label">Branch</div>${esc(incident.agent.branch || "—")}</div>
+            <div><div class="label">Tokens</div>${incident.agent.usage ? esc(incident.agent.usage.totalTokens) : "—"}</div>
+            <div><div class="label">Charged</div>${formatCost(incident.agent)}</div>
+          </div>
+          ${incident.agent.prUrl ? `<p><a href="${esc(incident.agent.prUrl)}">${esc(incident.agent.prUrl)}</a>${incident.agent.source === "mock" ? " (simulated)" : ""}</p>` : ""}
+        </section>` : "";
+      const reasons = incident.reasons && incident.reasons.length ? `
+        <section class="card"><h2>Escalation</h2><p>${esc(incident.reasons.join(" "))}</p></section>` : "";
+      const error = incident.error ? `<section class="card"><h2>Error</h2><p>${esc(incident.error)}</p></section>` : "";
+      const stream = `
+        <section class="card">
+          <h2>Agent stream</h2>
+          <pre>${incident.stream.length ? incident.stream.map((event) => esc(event.kind + "  " + event.text)).join("\n") : "Waiting for events."}</pre>
+        </section>`;
+      root.innerHTML = `
+        <p class="kicker">${esc(incident.id)}</p>
+        <h1 style="font-size:22px;margin:0 0 8px">${esc(incident.title)} <span class="state ${esc(incident.state)}">${esc(incident.state)}</span></h1>
+        <div class="stepper">${steps}${terminal}</div>
+        ${classification}${agent}${gates}${reasons}${error}${summary}${stream}`;
+      if (switched) root.scrollTop = 0;
+      renderedId = incident.id;
+    }
+
+    function formatCost(agent) {
+      if (!agent.usage || typeof agent.usage.chargedCents !== "number") return "—";
+      const dollars = (agent.usage.chargedCents / 100).toFixed(2);
+      return agent.source === "mock" ? `$${dollars} simulated` : `$${dollars}`;
+    }
+
+    const source = new EventSource("/api/events");
+    source.addEventListener("update", () => { refresh().catch(() => {}); });
+    refresh().catch((error) => {
+      document.getElementById("detail").textContent = String(error);
+    });
+  </script>
+</body>
+</html>

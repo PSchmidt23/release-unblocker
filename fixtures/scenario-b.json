@@ -1,0 +1,41 @@
+{
+  "deliveryId": "demo-scenario-b",
+  "evidence": {
+    "failedJobs": [
+      {
+        "name": "lint, typecheck, test",
+        "conclusion": "failure",
+        "steps": [
+          { "name": "Run npm ci", "conclusion": "success" },
+          { "name": "Run npm run lint", "conclusion": "success" },
+          { "name": "Run npm run typecheck", "conclusion": "success" },
+          { "name": "Run npm test", "conclusion": "failure" }
+        ]
+      }
+    ],
+    "logSnippets": [
+      "FAIL  src/proposals/calculator.test.ts > buildProposal > converts the discounted USD total, then rounds half-up",
+      "AssertionError: expected 91834 to be 91833 // Object.is equality",
+      "- 91833",
+      "+ 91834",
+      "❯ src/proposals/calculator.test.ts:80:25"
+    ]
+  },
+  "payload": {
+    "action": "completed",
+    "workflow_run": {
+      "id": 45702826376,
+      "name": "CI",
+      "conclusion": "failure",
+      "head_branch": "ci-fail-test",
+      "head_sha": "e6308e4295e9e1406009341891b7a741111df136",
+      "html_url": "https://github.com/PSchmidt23/demo-commercial-app/actions/runs/45702826376",
+      "display_title": "Discount the rounded quote-currency subtotal",
+      "run_attempt": 1
+    },
+    "repository": {
+      "full_name": "PSchmidt23/demo-commercial-app",
+      "html_url": "https://github.com/PSchmidt23/demo-commercial-app"
+    }
+  }
+}
