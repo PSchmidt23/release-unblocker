@@ -53,7 +53,7 @@ State per incident, appended to `audit.jsonl`:
 | Gate evaluation and the audit log | |
 | The optional Grok summary | |
 
-`src/agent.ts` is the only file that imports `@cursor/sdk`. Everything else talks to `runReleaseAgent()`. Escalated incidents launch `mode: "plan"` with `autoCreatePR: false` and a prompt that forbids edits. Cloud agents cannot drop write tools: `tools` and `disallowedTools` are local-only and throw `ConfigurationError` when combined with `cloud`. Plan mode is the supported non-writing conversation mode.
+`src/agent.ts` is the only file that creates or resumes a cloud agent. `src/doctor.ts` imports `@cursor/sdk` only to call `Cursor.me` (an authenticated account read) and never calls `Agent.create`. Everything else talks to `runReleaseAgent()`. Escalated incidents launch `mode: "plan"` with `autoCreatePR: false` and a prompt that forbids edits. Cloud agents cannot drop write tools: `tools` and `disallowedTools` are local-only and throw `ConfigurationError` when combined with `cloud`. Plan mode is the supported non-writing conversation mode.
 
 The promotion diff is the agent's commit range (`starting SHA...branch`), not the whole feature branch. A 500-line branch with an 8-line fix should still pass the 80-line gate.
 
@@ -90,6 +90,7 @@ Checked against the package types and [the TypeScript SDK docs](https://cursor.c
 - `run.stream()` yields `SDKMessage`
 - `run.wait()` returns `RunResult`
 - `agent.getUsage()` returns `AgentUsage`
+- `Cursor.me({ apiKey })` reads the authenticated key. `npm run doctor` uses it and does not create an agent.
 
 Differences from a short sketch of that API:
 
@@ -101,6 +102,30 @@ Differences from a short sketch of that API:
 - `Run.git.branches[]` carries `{ repoUrl, branch?, prUrl? }`. There is no commit SHA on the run. Gates compare the webhook's `head_sha` with the branch the run reports.
 
 `src/agent.ts` returns `AgentOptions` from `buildAgentCreateOptions`, so a wrong field fails `tsc`.
+
+## Pre-interview checklist
+
+Run this before a live demo so the first real pass does not die halfway through. Mock mode needs none of the keys.
+
+```bash
+export CURSOR_API_KEY=...     # user or service-account key; Team Admin keys do not work
+export GITHUB_TOKEN=...       # read the demo repo, Actions, and pull requests
+export XAI_API_KEY=...        # optional; unset uses the template summary
+export XAI_MODEL=grok-4.7     # optional
+npm run doctor
+npm start
+npm run demo -- --scenario B
+```
+
+`npm run doctor` prints a PASS/WARN/FAIL checklist and exits 1 when anything required failed. It never creates a cloud agent. Add `--json` for a machine-readable report. Keep the pull request from scenario B as a backup of the live path.
+
+Offline, with no server:
+
+```bash
+npm run demo -- --scenario A --inline --dry-run
+```
+
+`--inline` runs the incident in this process. `--dry-run` forces mock mode even when `CURSOR_API_KEY` is set.
 
 ## Run it
 
@@ -198,7 +223,7 @@ npm run typecheck
 npm test
 ```
 
-GitHub Actions (`.github/workflows/ci.yml`) runs those three. Tests cover the classifier (including the combined job name and the real SAST file), gates, idempotency and webhook signatures, the state machine for A/B/C, the one-shot resume when a diff is too big, and a fake SDK client that records `create` / `resume` / `send` / `stream` / `wait` / `getUsage`.
+GitHub Actions (`.github/workflows/ci.yml`) runs those three. Tests cover the classifier (including the combined job name and the real SAST file), gates, idempotency and webhook signatures, the state machine for A/B/C, the one-shot resume when a diff is too big, a fake SDK client that records `create` / `resume` / `send` / `stream` / `wait` / `getUsage`, and the doctor preflight (mocked `fetch`, stubbed `Cursor.me`).
 
 ## Production gaps
 

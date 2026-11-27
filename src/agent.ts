@@ -1,5 +1,6 @@
 /**
- * The only module that talks to @cursor/sdk.
+ * The only module that creates or resumes Cursor cloud agents.
+ * `doctor.ts` may call `Cursor.me` and must not call `Agent.create`.
  *
  * Verified against @cursor/sdk 1.5.0:
  *   Agent.create, Agent.resume, agent.send, run.stream, run.wait, agent.getUsage.
